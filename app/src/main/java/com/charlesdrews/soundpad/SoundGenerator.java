@@ -18,7 +18,7 @@ public class SoundGenerator {
     private static final int MIN_PITCH_IN_HZ = 220;
     private static final int NUM_OCTAVES = 3;
     private static final int SAMPLES_PER_WAVELENGTH = 50;
-    private static final int SAMPLE_RATE = (int) (MIN_PITCH_IN_HZ * Math.pow(2, NUM_OCTAVES) * SAMPLES_PER_WAVELENGTH); //AudioTrack.getNativeOutputSampleRate(AudioManager.STREAM_MUSIC);
+    private static final int SAMPLE_RATE = (int) (MIN_PITCH_IN_HZ * Math.pow(2, NUM_OCTAVES) * SAMPLES_PER_WAVELENGTH);
     private static final int CHANNEL_CONFIG = AudioFormat.CHANNEL_OUT_MONO;
     private static final int ENCODING_FORMAT = AudioFormat.ENCODING_PCM_16BIT;
     private static final int BUFFER_SIZE = AudioTrack.getMinBufferSize(
