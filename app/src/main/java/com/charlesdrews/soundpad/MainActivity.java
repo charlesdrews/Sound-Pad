@@ -1,20 +1,16 @@
 package com.charlesdrews.soundpad;
 
+import android.graphics.drawable.Drawable;
+import android.graphics.drawable.LayerDrawable;
 import android.media.AudioManager;
 import android.os.Bundle;
 import android.support.v7.app.AppCompatActivity;
-import android.util.DisplayMetrics;
-import android.view.MotionEvent;
-import android.widget.TextView;
-import android.widget.Toast;
+import android.view.View;
+import android.widget.ProgressBar;
 
-import java.util.Locale;
+public class MainActivity extends AppCompatActivity implements XYInputPad.XYInputPadListener {
+    private static final String TAG = "MainActivity";
 
-public class MainActivity extends AppCompatActivity {
-
-    private TextView mTextView;
-    private int mWidth, mHeight;
-    //    private ToneGenerator mToneGenerator;
     private SoundGenerator mSoundGenerator;
 
     @Override
@@ -22,15 +18,18 @@ public class MainActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
 
-        mTextView = findViewById(R.id.textBox);
-
-        DisplayMetrics displayMetrics = new DisplayMetrics();
-        getWindowManager().getDefaultDisplay().getMetrics(displayMetrics);
-        mWidth = displayMetrics.widthPixels;
-        mHeight = displayMetrics.heightPixels;
-
         mSoundGenerator = new SoundGenerator();
 
+        XYInputPad XYInputPad = findViewById(R.id.xyInputPad);
+        XYInputPad.setListener(this);
+        XYInputPad.setDivisions(SoundGenerator.NUM_WAVE_FORMS - 1, SoundGenerator.NUM_OCTAVES);
+
+        // Apply two gradients to the background of the input pad
+        LayerDrawable layerDrawable = new LayerDrawable(new Drawable[] {
+                getDrawable(R.drawable.horiz_gradient), getDrawable(R.drawable.vert_gradient)});
+        XYInputPad.setBackground(layerDrawable);
+
+        // Make physical volume buttons control media volume (as opposed to alarm volume by default)
         setVolumeControlStream(AudioManager.STREAM_MUSIC);
     }
 
@@ -43,40 +42,17 @@ public class MainActivity extends AppCompatActivity {
     }
 
     @Override
-    public boolean onTouchEvent(MotionEvent event) {
-        float x = event.getX() / mWidth;
-        float y = 1 - (event.getY() / mHeight);
-
-        switch (event.getActionMasked()) {
-            case MotionEvent.ACTION_DOWN:
-                displayCoordinates(x, y);
-                try {
-                    mSoundGenerator.start(y, x);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    Toast.makeText(this, "Error starting sound generation", Toast.LENGTH_SHORT).show();
-                }
-                return true;
-            case MotionEvent.ACTION_MOVE:
-                displayCoordinates(x, y);
-                try {
-                    mSoundGenerator.update(y, x);
-                } catch (InterruptedException e) {
-                    e.printStackTrace();
-                    Toast.makeText(this, "Error updating pitch", Toast.LENGTH_SHORT).show();
-                }
-                return true;
-            case MotionEvent.ACTION_UP:
-            case MotionEvent.ACTION_CANCEL:
-                mSoundGenerator.stop();
-                return true;
-            default:
-                return super.onTouchEvent(event);
-        }
+    public void down(double relativeX, double relativeY) {
+        mSoundGenerator.start(1 - relativeY, relativeX);
     }
 
-    private void displayCoordinates(float x, float y) {
-        mTextView.setText(String.format(Locale.getDefault(), "x: %.0f%%\ny: %.0f%%",
-                x * 100, y * 100));
+    @Override
+    public void move(double relativeX, double relativeY) {
+        mSoundGenerator.update(1 - relativeY, relativeX);
+    }
+
+    @Override
+    public void up() {
+        mSoundGenerator.stop();
     }
 }
